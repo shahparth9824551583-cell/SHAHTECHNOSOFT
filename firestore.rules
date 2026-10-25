@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin = Firebase Auth user with custom claim admin == true (set only via scripts/set-admin.mjs)
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Applications are CREATED only by the server (firebase-admin bypasses rules).
+    // Public visitors can never read, list, create, update or delete.
+    match /applications/{id} {
+      allow read: if isAdmin();
+      allow create, delete: if false;
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status', 'paymentStatus', 'adminNotes', 'paymentNotes', 'updatedAt']);
+    }
+
+    // Course / internship visibility (public can read, only admin can write)
+    match /settings/visibility {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
