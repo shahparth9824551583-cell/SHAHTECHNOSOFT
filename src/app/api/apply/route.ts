@@ -59,12 +59,12 @@ export async function POST(req: Request) {
       state: d.state,
       city: d.city,
       educationLevel: d.educationLevel,
-      collegeName: d.collegeName,
+      collegeName: d.collegeName ?? "",
       applicationType: d.applicationType,
       itemId: d.itemId,
       itemName: item.name,
       price: item.price,
-      message: d.message,
+      message: d.message ?? "",
       consent: true,
       status: "New",
       paymentStatus: "Not Paid",
@@ -75,7 +75,8 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ ok: true, reference });
   } catch (e) {
-    console.error("Application save failed:", e);
+    const err = e as { code?: unknown; message?: string };
+    console.error("Application save failed: - route.ts:79", err?.code, err?.message, e);
     return fail(500, "We could not save your application. Please try again, or contact us on WhatsApp.");
   }
 }
